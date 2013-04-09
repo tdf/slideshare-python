@@ -1,6 +1,9 @@
-from bottle import route, run, static_file
+import os
+from bottle import route, run, static_file, request
+from subprocess import call
 
-# dummy content {
+
+# -----
 
 @route('/api/users/')
 def users():
@@ -35,7 +38,23 @@ def send_keywords(deck, rev, slide):
     return {'Author': 'Joe User',
             'Title':  'The great slideshow'}
 
-# dummy content }
+@route('/upload', method='POST')
+def upload_file():
+    upload_path = '/tmp'
+    soffice = '/dump2/libo/libo2/install/program/soffice.bin'
+    convert = 'convert'
+    thumbnail_size = '128x128'
+    # TODO: Add all required parameters here
+    tag     = request.forms.get('tag')
+    file    = request.files.get('file')
+    # TODO: Create proper paths for uploads & Check for upload errors
+    file.save(upload_path)
+    call([soffice, '--convert-to', 'pdf', '--outdir', upload_path, upload_path+'/'+file.filename])
+    call([convert, '-resize', thumbnail_size, upload_path+'/'+os.path.splitext(file.filename)[0]+'.pdf', upload_path+'/'+os.path.splitext(file.filename)[0]+'.jpg'])
+    return 'Success:'+tag+':'+file.filename
+
+
+#-----
 
 @route('/api/users/test/<deck>/<rev:int>/deck.fodp')
 def send_deck(deck, rev):
