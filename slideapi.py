@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+#
+# This file is part of the LibreOffice project.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
 import os, json
 from bottle import get, post, auth_basic, run, static_file, request, debug
 from subprocess import call
