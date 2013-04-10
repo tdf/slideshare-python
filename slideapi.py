@@ -7,8 +7,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-import os, json, time
-from bottle import get, post, auth_basic, run, static_file, request, debug, view, HTTPError
+import os, json, time, _cpwsgiserver3
+from bottle import get, post, auth_basic, run, static_file, request
+from bottle import debug, view, HTTPError, server_names, ServerAdapter
 from subprocess import call
 
 # config
@@ -105,7 +106,6 @@ def list_revs(user,deck):
 def list_revs(user,deck):
     return dict(revs=get_revs(user,deck))
 
-# eventually use ssl here - http://dgtool.blogspot.de/2011/12/ssl-encryption-in-python-bottle.html
 @post('/users/<user>/<deck>')
 @post('/api/users/<user>/<deck>')
 @auth_basic(validate_auth, realm='upload')
@@ -217,11 +217,28 @@ def send_slide(user, deck, rev, slide):
     path = "%s/%s/%s/%d/%d/" % (root,user,deck,rev,slide)
     return static_file(str(slide)+'.odp', root=path, mimetype='text/xml')
 
+@get('/')
+def home_page():
+    return '<html><body>Welcome</body></html>'
+
 # -------------------------------------------------------------------
+
+class SSLInterface(ServerAdapter):
+    def run(self, handler):
+        server = _cpwsgiserver3.CherryPyWSGIServer((self.host, self.port), handler)
+        cert = 'bottletest.pem'
+        server.ssl_certificate = cert
+        server.ssl_private_key = cert
+        try:
+            server.start()
+        finally:
+            server.stop()
+
+server_names['sslinterface'] = SSLInterface
 
 def main():
     debug(True)
-    run(host='localhost', port=8080, reloader=True, quiet=False)
+    run(host='localhost', port=8080, reloader=True, quiet=False, server='sslinterface')
 
 if __name__ == "__main__":
     main()
