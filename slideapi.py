@@ -141,14 +141,7 @@ def upload_deck(user,deck):
                'upload_filename': content.filename},
               out)
 
-    thumbnail_size = '128x128'
-
-    # override defaults by config
-    if "thumbnails" in local_conf:
-        thumbnails_dict = local_conf["thumbnails"]
-        thumbnail_size = thumbnails_dict['thumbnail_size'] if 'thumbnail_size' in thumbnails_dict else thumbnail_size
-
-    os.system('./convert_deck.sh '+upload_path+' '+thumbnail_size)
+    # thumbnail generation happens asynchronously via updatedeck.py
     return 'Success:'+tag+':'+content.filename
 
 
