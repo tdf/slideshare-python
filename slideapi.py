@@ -7,7 +7,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-import os, json, time, _cpwsgiserver3
+import os, json, time
+from cherrypy2 import _cpwsgiserver3
 from bottle import get, post, auth_basic, run, static_file, request
 from bottle import debug, view, HTTPError, server_names, ServerAdapter
 from subprocess import call
@@ -219,7 +220,7 @@ def home_page():
 class SSLInterface(ServerAdapter):
     def run(self, handler):
         server = _cpwsgiserver3.CherryPyWSGIServer((self.host, self.port), handler)
-        cert = 'bottletest.pem'
+        cert = 'server.pem'
         server.ssl_certificate = cert
         server.ssl_private_key = cert
         try:
