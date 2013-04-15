@@ -14,6 +14,6 @@ for i in $1/deck-*.png; do
     rev1=${i/*deck-/}
     rev2=${rev1/.png/}
     mkdir -p $1/$rev2
-    mv $i $1/$rev2/$rev2.png
+    mv $i $1/$rev2/thumbnail.png
 done
 
