@@ -77,7 +77,7 @@ def get_lastrev(user,part,deck):
     if not os.path.isdir(path):
         return 0
     # get last revision
-    return int(sorted([rev for rev in os.listdir(path) if os.path.isdir(path+rev)], key=int)[-1])
+    return int(sorted([rev for rev in os.listdir(path) if os.path.isdir(path+rev) and rev != 'latest'], key=int)[-1])
 
 @get('/api/users/<user>/')
 def list_decks(user):
@@ -120,7 +120,7 @@ def get_revs(user,part,deck):
     path = "%s/%s/%s/%s/" % (root,user,part,deck)
     if not os.path.isdir(path):
         return []
-    return sorted([rev for rev in os.listdir(path) if os.path.isdir(path+rev)], key=int)
+    return sorted([rev for rev in os.listdir(path) if os.path.isdir(path+rev) and rev != 'latest'], key=int)
 
 @get('/api/users/<user>/<part>/<deck>/')
 def list_revs(user,part,deck):
@@ -165,6 +165,10 @@ def upload_deck(user,deck):
                'server_version': '1',
                'upload_filename': content.filename},
               out)
+
+    # update link to latest rev
+    os.unlink(path+'latest')
+    os.symlink(str(new_rev), path+'latest')
 
     # thumbnail generation happens asynchronously via updatedeck.py
     return 'Success:'+tag+':'+content.filename
