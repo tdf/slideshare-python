@@ -167,7 +167,8 @@ def upload_deck(user,deck):
               out)
 
     # update link to latest rev
-    os.unlink(path+'latest')
+    if os.path.exists(path+'latest'):
+        os.unlink(path+'latest')
     os.symlink(str(new_rev), path+'latest')
 
     # thumbnail generation happens asynchronously via updatedeck.py
@@ -251,7 +252,6 @@ def list_slides(user, part, deck, rev):
 @get('/api/users/<user>/<part>/<deck>/<rev:int>/<slide:int>/thumbnail.png')
 def get_thumbnail(user, part, deck, rev, slide):
     path = "%s/%s/%s/%s/%d/%d/" % (root,user,part,deck,rev,slide)
-    print path
     return static_file('thumbnail.png', root=path, mimetype='image/png')
 
 @get('/api/users/<user>/<part>/<deck>/<rev:int>/meta.json')
@@ -277,6 +277,11 @@ def send_slide(user, part, deck, rev, slide):
 @get('/')
 def home_page():
     return '<html><body>Welcome</body></html>'
+
+@get('/users/<username>/edit')
+@view('app')
+def app_page(username):
+    return dict(user=username)
 
 # -------------------------------------------------------------------
 
