@@ -12,6 +12,8 @@ from cherrypy2 import _cpwsgiserver3
 from bottle import get, post, auth_basic, run, static_file, request
 from bottle import debug, view, HTTPError, server_names, ServerAdapter
 from subprocess import call
+from lpod.document import odf_get_document, odf_new_document, ODF_MANIFEST
+import tempfile
 
 # config
 #
@@ -22,6 +24,11 @@ from subprocess import call
 #
 local_conf=json.loads(open('local.json').read()) if os.path.exists('local.json') else {}
 root=local_conf["filestore"]
+tmp_root=local_conf["tmpstore"]
+
+class Decks:
+    slide = None
+    deck = None
 
 def validate_auth(user, password):
     if "users" in local_conf:
@@ -216,11 +223,62 @@ def get_thumbnail(user, part, deck, rev):
     # serve thumbnail from that rev, first slide
     return static_file('thumbnail.png', root=path+'/0/', mimetype='image/png')
 
+# get the (chosen) slides from Decks as one single deck
+def get_slides_deck(decks_and_slides, output):
+    new_deck = odf_new_document('presentation')
+    new_deck.delete_styles()
+    new_deck_body = new_deck.get_body()
+    new_deck_manifest = new_deck.get_part(ODF_MANIFEST)
+
+    for deck_and_slides in decks_and_slides:
+        deck = odf_get_document(deck_and_slides.deck)
+        if deck == None:
+            continue
+        new_deck.merge_styles_from(deck)
+        deck_body = deck.get_body()
+        deck_manifest = deck.get_part(ODF_MANIFEST)
+        for slide in deck_and_slides.slides:
+            try:
+                slide_position = int(slide) - 1 # Assuming index starts with 1
+                source_slide = deck_body.get_draw_page(position = slide_position)
+            except:
+                continue
+            if source_slide == None:
+                continue
+
+            # Copy Images
+            for image in source_slide.get_images():
+                uri = image.get_url()
+                media_type = deck_manifest.get_media_type(uri)
+                new_deck_manifest.add_full_path(uri, media_type)
+                new_deck.set_part(uri, deck.get_part(uri))
+
+            new_deck_body.append(source_slide.clone())
+
+    new_deck.save(target=output, pretty=True)
+
 @get('/users/<user>/<part>/<deck>/<rev:int>/deck.odp')
 @get('/api/users/<user>/<part>/<deck>/<rev:int>/deck.odp')
 def send_deck(user, part, deck, rev):
     path = "%s/%s/%s/%s/%d/" % (root,user,part,deck,rev)
-    return static_file(deck+'.odp', root=path, mimetype='text/xml')
+    slides = None
+    try:
+        slides=request.query['slides']
+        print slides
+    except:
+        pass
+    if slides != None:
+        mode, tmp_file = tempfile.mkstemp(suffix='.odp', prefix='temp', dir=tmp_root)
+        d = Decks()
+        d.slides = slides.split(',')
+        d.deck = path+'/deck.odp'
+        get_slides_deck([d],tmp_file)
+        filename = tmp_file
+        if filename.rfind('/') >= 0:
+            filename = filename[filename.rfind('/')+1:]
+        print filename
+        return static_file(filename, root=tmp_root, download='deck.odp')
+    return static_file('deck.odp', root=path, mimetype='text/xml', download='deck.odp')
 
 # -------------------------------------------------------------------
 
