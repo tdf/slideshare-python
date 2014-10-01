@@ -1,0 +1,10 @@
+{
+    "filestore": "data/filestore",
+    "tmpstore": "data/tmpstore",
+    "users": {
+        "joe": {
+            "password": "hacker",
+            "description": "Some test user"
+        }
+    }
+}
