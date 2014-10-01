@@ -8,15 +8,17 @@
 #
 
 import fnmatch
-import os
+import os, json
 from subprocess import call
 
 # Logic:
 # Find all *.*odp recursively and see if there are corresponding .pngs
 # if not call convert_deck.sh
 
+local_conf=json.loads(open('local.json').read()) if os.path.exists('local.json') else {}
+
 matches = []
-for root, dirnames, filenames in os.walk('filestore'):
+for root, dirnames, filenames in os.walk(local_conf['filestore']):
     for filename in fnmatch.filter(filenames, 'deck*.*odp'):
         if len(fnmatch.filter(filenames, 'deck*.png')) <= 0:
             call(['./convert_deck.sh', root, '128x128'])
