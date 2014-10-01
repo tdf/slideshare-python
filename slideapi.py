@@ -8,7 +8,7 @@
 #
 
 import os, json, time
-from cherrypy2 import _cpwsgiserver3
+from cherrypy import wsgiserver
 from bottle import get, post, auth_basic, run, static_file, request
 from bottle import debug, view, HTTPError, server_names, ServerAdapter
 from subprocess import call
@@ -345,7 +345,7 @@ def app_page(username):
 
 class SSLInterface(ServerAdapter):
     def run(self, handler):
-        server = _cpwsgiserver3.CherryPyWSGIServer((self.host, self.port), handler)
+        server = wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
         #cert = 'server.pem'
         #server.ssl_certificate = cert
         #server.ssl_private_key = cert
