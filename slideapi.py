@@ -106,7 +106,7 @@ def list_decksgroups(user):
 @get('/users/<user>/decks/')
 @view('decks')
 def list_decks(user):
-    return dict(decks=get_decks(user))
+    return dict(decks=get_decks(user), user=user)
 
 @get('/users/<user>/groups/')
 @view('groups')
@@ -139,11 +139,17 @@ def list_revs(user,part,deck):
     return dict(revs=get_revs(user,part,deck))
 
 @post('/users/<user>/decks/<deck>')
+@post('/users/<user>/decks/')
 @post('/api/users/<user>/decks/<deck>')
 @auth_basic(validate_auth, realm='upload')
-def upload_deck(user,deck):
-    path = "%s/%s/decks/%s/" % (root,user,deck)
-    new_rev = get_lastrev(user,'decks',deck) + 1
+def upload_deck(user,deck = None):
+    if deck is None and request.forms.get('name') is None:
+        raise HTTPError(body='No name for the deck to upload')
+    name = deck
+    if deck is None:
+        name = request.forms.get('name')
+    path = "%s/%s/decks/%s/" % (root,user,name)
+    new_rev = get_lastrev(user,'decks',name) + 1
     new_path = path+str(new_rev)
 
     if os.path.isdir(new_path):
